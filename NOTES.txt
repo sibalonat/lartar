@@ -1,0 +1,1 @@
+https://capsules.codes/en/blog/fyi/en-fyi-serve-a-laravel-project-on-web-desktop-and-mobile-with-tauri
