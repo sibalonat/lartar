@@ -5,7 +5,9 @@
         "build": "vite build",
         "dev": "vite",
         "dev:vite:web": "vite --config vite.web.config.js",
-        "tauri": "tauri"
+        "tauri": "tauri",
+        "dev:vite:desktop": "vite --config vite.desktop.config.js",
+        "dev:tauri:desktop": "tauri dev"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
