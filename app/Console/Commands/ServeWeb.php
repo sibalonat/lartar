@@ -31,20 +31,21 @@ class ServeWeb extends Command
         intro( 'Running Web Environment' );
 
         $this->initViteServer();
-        $this->initPHPServer();
+        // $this->initPHPServer();
     }
 
     private function initViteServer() : void
     {
         note( "Starting Vite Development Server" );
 
-        Process::start( "npm run dev:vite:web" );
+        // Process::start( "npm run dev:vite:web" );
+        Process::start( "npm run dev" );
     }
 
-    private function initPHPServer() : void
-    {
-        note( "Starting PHP Server" );
+    // private function initPHPServer() : void
+    // {
+    //     note( "Starting PHP Server" );
 
-        Process::forever()->tty()->run( "php artisan serve --port=50000" );
-    }
+    //     Process::forever()->tty()->run( "php artisan serve --port=50000" );
+    // }
 }
