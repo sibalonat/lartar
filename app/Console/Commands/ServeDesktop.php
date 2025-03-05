@@ -15,7 +15,7 @@ class ServeDesktop extends Command
      *
      * @var string
      */
-    protected $signature = 'app:serve-desktop';
+    protected $signature = 'serve:desktop';
 
     /**
      * The console command description.
