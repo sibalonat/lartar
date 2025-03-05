@@ -14,7 +14,7 @@ class ServeWeb extends Command
      *
      * @var string
      */
-    protected $signature = 'app:serve-web';
+    protected $signature = 'serve:web';
 
     /**
      * The console command description.
