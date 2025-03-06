@@ -69,7 +69,7 @@ COPY php.ini /etc/php/8.4/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
 
 # Ensure proper permissions
-RUN chown -R sail:sail /var/www/html/src-tauri/
+# RUN chown -R sail:sail /var/www/html/src-tauri
 
 EXPOSE 80/tcp
 
