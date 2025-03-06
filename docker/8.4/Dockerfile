@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-LABEL maintainer="Taylor Otwell"
+LABEL maintainer="Marin Nikolli"
 
 ARG WWWGROUP
 ARG NODE_VERSION=22
@@ -12,9 +12,6 @@ WORKDIR /var/www/html
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 ENV SUPERVISOR_PHP_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan serve --host=0.0.0.0 --port=80"
-# ENV SUPERVISOR_DESKTOP_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html desktop:serve"
-# ENV SUPERVISOR_VITE_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html npm run dev:vite:desktop"
-# ENV SUPERVISOR_TAURI_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html npm run dev:vite:desktop"
 ENV SUPERVISOR_PHP_USER="sail"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -50,6 +47,10 @@ RUN apt-get update && apt-get upgrade -y \
     && echo "deb [signed-by=/etc/apt/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
     && curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    libgtk-3-dev \
+    libglu1-mesa-dev \
+    libdbus-glib-1-dev \
+    mesa-utils \
     && apt-get update \
     && apt-get install -y yarn \
     && apt-get install -y $MYSQL_CLIENT \
@@ -63,6 +64,9 @@ RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
 RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
 RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
+
+# Ensure proper permissions for Tauri files/directories
+RUN chown -R sail:sail /var/www/html/src_tauri/
 
 COPY start-container /usr/local/bin/start-container
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
