@@ -6,6 +6,7 @@ services:
             args:
                 WWWGROUP: '${WWWGROUP}'
         image: 'sail-8.4/app'
+        tty: true
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -23,11 +24,12 @@ services:
             - sail
         depends_on:
             - mysql
-        command: |
-            bash -c "
-                php artisan serve:desktop &
-                php artisan serve:web
-            "
+        # command: |
+        #     bash -c "
+        #         php artisan serve:web
+        #     "
+        #  &
+        #         php artisan serve:desktop
         # command: bash -c "php artisan serve:desktop"
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost"]
