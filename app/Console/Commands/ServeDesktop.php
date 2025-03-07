@@ -39,7 +39,7 @@ class ServeDesktop extends Command
     {
         note( 'Starting Desktop App' );
 
-        if( ! File::exists( base_path( 'src-tauri/target' ) ) )
+        if( !File::exists( base_path( 'src-tauri/target' ) ) )
         {
             Process::path( 'src-tauri' )->forever()->tty()->run( "cargo build" );
         }
@@ -48,6 +48,13 @@ class ServeDesktop extends Command
     }
 
     private function initViteServer() : void
+    {
+        note( "Starting Vite Development Server" );
+
+        Process::start( "npm run dev:vite:desktop" );
+    }
+
+    private function buildCargo() : void
     {
         note( "Starting Vite Development Server" );
 
