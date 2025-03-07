@@ -24,7 +24,7 @@ services:
             - sail
         depends_on:
             - mysql
-        command: bash -c "php artisan serve:web & php artisan serve:desktop"
+        # command: bash -c "php artisan serve:web & php artisan serve:desktop"
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost"]
             retries: 3

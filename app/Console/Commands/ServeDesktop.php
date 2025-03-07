@@ -38,10 +38,16 @@ class ServeDesktop extends Command
     private function initTauriServer() : void
     {
         note( 'Starting Desktop App' );
+        $tauriPath = base_path('src-tauri');
+        note( 'Starting Desktop App at ' . $tauriPath );
 
-        if( !File::exists( base_path( 'src-tauri/target' ) ) )
+        if (!File::exists($tauriPath . '/Cargo.toml')) {
+            throw new \RuntimeException("Cargo.toml not found in src-tauri directory. Please add it to your project.");
+        }
+
+        if( !File::exists( $tauriPath . '/target'  ) )
         {
-            Process::path( 'src-tauri' )->forever()->tty()->run( "cargo build" );
+            Process::path( $tauriPath )->forever()->tty()->run( "cargo build" );
         }
 
         Process::forever()->tty()->run( "npm run dev:tauri:desktop -- --port=50003" );
