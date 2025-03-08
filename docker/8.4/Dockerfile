@@ -37,9 +37,6 @@ RUN apt-get update && apt-get upgrade -y \
     libsoup2.4-dev libsoup-3.0-dev \
     && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu noble main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y \
-    && . $HOME/.cargo/env \
-    && echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /etc/bash.bashrc \
     && apt-get update \
     && apt-get install -y php8.4-cli php8.4-dev \
        php8.4-pgsql php8.4-sqlite3 php8.4-gd \
@@ -69,6 +66,12 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get -y autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install Rust and Cargo
+RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y \
+    && . $HOME/.cargo/env \
+    && echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /etc/bash.bashrc
+
 
 # Allow PHP to bind to low-numbered ports
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
