@@ -17,13 +17,15 @@ ENV SUPERVISOR_PHP_USER="sail"
 # Set timezone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Configure apt for better package management
-RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
-
-# Install system dependencies
 RUN apt-get update && apt-get upgrade -y \
+    && mkdir -p /etc/apt/keyrings \
+    && apt-get install -y software-properties-common \
+    && add-apt-repository main \
+    && add-apt-repository universe \
+    && add-apt-repository restricted \
+    && add-apt-repository multiverse \
+    && apt-get update \
+    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
     && mkdir -p /etc/apt/keyrings \
     && apt-get install -y software-properties-common \
     && add-apt-repository main \
@@ -34,8 +36,23 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
     libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev \
     libgl1 libegl1 libgbm1 libglvnd0 libglx0 libgles2 libglu1-mesa \
-    libsoup2.4-dev libsoup-3.0-dev \
-    && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
+    libsoup2.4-dev libsoup-3.0-dev
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y && \
+    echo 'export PATH=$HOME/.cargo/bin:$PATH' >> $HOME/.bashrc && \
+    . $HOME/.cargo/env && \
+    rustup default stable
+
+# Ensure the Cargo bin directory is in the PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Configure apt for better package management
+RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
+    echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
+    echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
+
+# Install system dependencies
+RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
     && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu noble main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
     && apt-get update \
     && apt-get install -y php8.4-cli php8.4-dev \
@@ -72,16 +89,6 @@ RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
 RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
 
-# Install Rust and Cargo
-RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y \
-    && . "$HOME/.cargo/env" \
-    && echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /etc/bash.bashrc
-
-# Ensure the sail user can access Cargo
-USER sail
-RUN echo '. $HOME/.cargo/env' >> /home/sail/.bashrc \
-    && echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /home/sail/.bashrc
-USER root
 
 # Allow PHP to bind to low-numbered ports
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
