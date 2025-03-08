@@ -69,8 +69,14 @@ RUN apt-get update && apt-get upgrade -y \
 
 # Install Rust and Cargo
 RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y \
-    && . $HOME/.cargo/env \
+    && echo 'source $HOME/.cargo/env' >> /etc/bash.bashrc \
     && echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /etc/bash.bashrc
+
+# Ensure the sail user can access Cargo
+USER sail
+RUN echo 'source $HOME/.cargo/env' >> /home/sail/.bashrc \
+    && echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /home/sail/.bashrc
+USER root
 
 
 # Allow PHP to bind to low-numbered ports
