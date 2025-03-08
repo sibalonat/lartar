@@ -25,18 +25,7 @@ RUN apt-get update && apt-get upgrade -y \
     && add-apt-repository restricted \
     && add-apt-repository multiverse \
     && apt-get update \
-    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
-    && mkdir -p /etc/apt/keyrings \
-    && apt-get install -y software-properties-common \
-    && add-apt-repository main \
-    && add-apt-repository universe \
-    && add-apt-repository restricted \
-    && add-apt-repository multiverse \
-    && apt-get update \
-    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
-    libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev \
-    libgl1 libegl1 libgbm1 libglvnd0 libglx0 libgles2 libglu1-mesa \
-    libsoup2.4-dev libsoup-3.0-dev
+    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y && \
     echo 'export PATH=$HOME/.cargo/bin:$PATH' >> $HOME/.bashrc && \
@@ -45,6 +34,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y &&
 
 # Ensure the Cargo bin directory is in the PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
+
+ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
 
 # Configure apt for better package management
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
@@ -69,6 +60,10 @@ RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e5394
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
     && apt-get update \
     && apt-get install -y nodejs \
+    librsvg2-bin fswatch ffmpeg nano \
+    libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev \
+    libgl1 libegl1 libgbm1 libglvnd0 libglx0 libgles2 libglu1-mesa \
+    libsoup2.4-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev \
     && npm install -g npm \
     && npm install -g pnpm \
     && npm install -g bun \
