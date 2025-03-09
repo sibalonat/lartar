@@ -17,6 +17,15 @@ export MESA_LOADER_DRIVER_OVERRIDE=swrast
 export EGL_PLATFORM=surfaceless
 export LIBGL_DRI3_DISABLE=1
 
+# Only set CI=true if we're explicitly building, not for dev
+if [[ "$*" == *"tauri build"* ]]; then
+    export CI=true
+else
+    # For development purposes, allow Laravel Vite to run
+    export CI=false
+    export LARAVEL_BYPASS_ENV_CHECK=1
+fi
+
 # Start Xvfb
 Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 XVFB_PID=$!

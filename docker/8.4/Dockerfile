@@ -90,6 +90,9 @@ ENV TAURI_CLI_SKIP_SLOW_DEVICES_CHECK=1
 # When building in CI
 ENV CI=true
 
+# Laravel Vite bypass (in case we need it)
+ENV LARAVEL_BYPASS_ENV_CHECK=1
+
 # Set up XDG directories
 ENV XDG_RUNTIME_DIR=/tmp/runtime-dir
 ENV XDG_DATA_HOME=/home/sail/.local/share
