@@ -46,6 +46,8 @@ jobs:
 
       - name: Build Docker images
         run: |
+          # Build Docker images
+          export COMPOSE_BAKE=true
           docker-compose build --build-arg INCLUDE_USER_SETUP=false
 
       # - name: Run Docker containers
