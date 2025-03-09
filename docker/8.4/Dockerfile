@@ -82,14 +82,9 @@ ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
 ENV DISPLAY=:99
 
 # # Remove the default Ubuntu user and create the sail user
-# RUN userdel -r ubuntu
-# RUN groupadd --force -g $WWWGROUP sail
-# RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
-# Remove the default Ubuntu user and create the sail user
 RUN userdel -r ubuntu && \
     groupadd --force -g $WWWGROUP sail && \
     useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
-
 
 # Allow PHP to bind to low-numbered ports
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
