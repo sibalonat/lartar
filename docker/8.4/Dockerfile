@@ -102,11 +102,6 @@ ENV MESA_LOADER_DRIVER_OVERRIDE=swrast
 ENV EGL_PLATFORM=surfaceless
 ENV LIBGL_DRI3_DISABLE=1
 
-# # Remove the default Ubuntu user and create the sail user
-# RUN userdel -r ubuntu
-# RUN groupadd --force -g $WWWGROUP sail
-# RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
-
 # Conditionally remove the default Ubuntu user and create the sail user
 RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
         userdel -r ubuntu && \
@@ -122,8 +117,6 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
         groupadd --system render && \
         usermod -aG render sail; \
     fi
-# RUN groupadd --system render
-# RUN usermod -aG render sail
 
 # Copy configuration files
 COPY start-container /usr/local/bin/start-container
