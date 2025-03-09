@@ -2,7 +2,7 @@ name: Docker Setup Validation
 
 on:
   push:
-    branches: [ mater, dev ]
+    branches: [ master ]
   # pull_request:
   #   branches: [ main, dev ]
 
