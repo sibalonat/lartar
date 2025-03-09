@@ -78,6 +78,13 @@ RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e5394
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Install additional GUI dependencies
+RUN apt-get update && apt-get install -y \
+    mesa-utils \
+    x11-apps \
+    xauth \
+    && rm -rf /var/lib/apt/lists/*
+
 # Ensure the Cargo bin directory is in the PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
@@ -121,6 +128,11 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
         groupadd --system render && \
         usermod -aG render sail; \
     fi
+
+# Create necessary directories and set permissions
+RUN mkdir -p /tmp/runtime-dir && \
+    chmod 700 /tmp/runtime-dir && \
+    chown sail:sail /tmp/runtime-dir
 
 # Copy configuration files
 COPY start-container /usr/local/bin/start-container

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+xhost +local:docker
 # Create XDG runtime directory
 export XDG_RUNTIME_DIR=/tmp/runtime-dir
 mkdir -p $XDG_RUNTIME_DIR
@@ -36,6 +37,17 @@ sleep 1
 if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then
     echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
     exit 1
+fi
+
+# Set up X11 permissions
+if [ -f /home/sail/.Xauthority ]; then
+    chmod 600 /home/sail/.Xauthority
+    chown sail:sail /home/sail/.Xauthority
+fi
+
+# Set up video device permissions
+if [ -e /dev/dri ]; then
+    chmod 666 /dev/dri/*
 fi
 
 if [ ! -z "$WWWUSER" ]; then
