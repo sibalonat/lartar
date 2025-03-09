@@ -83,6 +83,25 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
 ENV DISPLAY=:99
 
+# Add this to your Dockerfile or set in your environment
+ENV RUSTFLAGS=--cfg=web_sys_unstable_apis
+ENV TAURI_SKIP_DEVSERVER_CHECK=1
+ENV TAURI_CLI_SKIP_SLOW_DEVICES_CHECK=1
+# When building in CI
+ENV CI=true
+
+# Set up XDG directories
+ENV XDG_RUNTIME_DIR=/tmp/runtime-dir
+ENV XDG_DATA_HOME=/home/sail/.local/share
+ENV XDG_CONFIG_HOME=/home/sail/.config
+ENV XDG_CACHE_HOME=/home/sail/.cache
+
+# OpenGL/Mesa configuration for software rendering
+ENV LIBGL_ALWAYS_SOFTWARE=1
+ENV MESA_LOADER_DRIVER_OVERRIDE=swrast
+ENV EGL_PLATFORM=surfaceless
+ENV LIBGL_DRI3_DISABLE=1
+
 # # Remove the default Ubuntu user and create the sail user
 # RUN userdel -r ubuntu
 # RUN groupadd --force -g $WWWGROUP sail

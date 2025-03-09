@@ -1,7 +1,28 @@
 #!/usr/bin/env bash
 
+# Create XDG runtime directory
+export XDG_RUNTIME_DIR=/tmp/runtime-dir
+mkdir -p $XDG_RUNTIME_DIR
+chmod 700 $XDG_RUNTIME_DIR
+
+# Set up other XDG directories
+export XDG_DATA_HOME=/home/sail/.local/share
+export XDG_CONFIG_HOME=/home/sail/.config
+export XDG_CACHE_HOME=/home/sail/.cache
+mkdir -p $XDG_DATA_HOME $XDG_CONFIG_HOME $XDG_CACHE_HOME
+
+# Set up Mesa/OpenGL environment variables for software rendering
+export LIBGL_ALWAYS_SOFTWARE=1
+export MESA_LOADER_DRIVER_OVERRIDE=swrast
+export EGL_PLATFORM=surfaceless
+export LIBGL_DRI3_DISABLE=1
+
 # Start Xvfb
-Xvfb :99 -screen 0 1024x768x16 &
+Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+XVFB_PID=$!
+
+# Wait a moment for Xvfb to start
+sleep 1
 
 if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then
     echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
