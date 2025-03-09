@@ -37,7 +37,7 @@ jobs:
           docker-compose dependency list --check > /dev/null || { echo "Docker Compose dependencies are invalid"; exit 1; }
 
       - name: Save Docker configuration for review (optional)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-configuration
           path: ./docker/*
