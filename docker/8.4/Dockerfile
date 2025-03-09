@@ -136,7 +136,6 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
     chown sail:sail /tmp/runtime-dir; \
 fi
 
-
 # Copy configuration files
 COPY start-container /usr/local/bin/start-container
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
