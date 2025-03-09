@@ -58,7 +58,7 @@ RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e5394
     librsvg2-bin fswatch ffmpeg nano \
     libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev \
     libgl1 libegl1 libgbm1 libglvnd0 libglx0 libgles2 libglu1-mesa \
-    libsoup2.4-dev libsoup-3.0-dev libwebkit2gtk-4.0-dev xvfb \
+    libsoup2.4-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev xvfb \
     libgtk-4-dev libgdk-pixbuf2.0-dev wayland-protocols libx11-dev \
     && npm install -g npm \
     && npm install -g pnpm \
@@ -79,12 +79,16 @@ RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e5394
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-ENV DISPLAY=:0
+ENV DISPLAY=:99
 
+# # Remove the default Ubuntu user and create the sail user
+# RUN userdel -r ubuntu
+# RUN groupadd --force -g $WWWGROUP sail
+# RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
 # Remove the default Ubuntu user and create the sail user
-RUN userdel -r ubuntu
-RUN groupadd --force -g $WWWGROUP sail
-RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
+RUN userdel -r ubuntu && \
+    groupadd --force -g $WWWGROUP sail && \
+    useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
 
 
 # Allow PHP to bind to low-numbered ports
