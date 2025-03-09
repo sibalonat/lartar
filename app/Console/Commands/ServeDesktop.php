@@ -45,14 +45,17 @@ class ServeDesktop extends Command
             throw new \RuntimeException("Cargo.toml not found in src-tauri directory. Please add it to your project.");
         }
 
-        note( 'File exists ' . File::exists( $tauriPath . '/target'  ) );
+        note( 'File ' . File::exists( $tauriPath . '/target'  ) );
 
         if( !File::exists( $tauriPath . '/target'  ) )
         {
-            Process::path( $tauriPath )->forever()->tty()->run( "cargo build" );
+            // ->tty()
+            Process::path( $tauriPath )->forever()->run( "cargo build" );
         }
 
-        Process::forever()->tty()->run( "npm run dev:tauri:desktop -- --port=50003" );
+        // ->tty()
+
+        Process::forever()->run( "npm run dev:tauri:desktop -- --port=50003" );
     }
 
     private function initViteServer() : void
