@@ -42,7 +42,7 @@ jobs:
           docker-compose config > /dev/null || { echo "Docker Compose file is invalid"; exit 1; }
 
           # List all services to check dependencies
-          docker-compose config --services > /dev/null || { echo "Docker Compose dependencies are invalid"; exit 1; }s
+          docker-compose config --services > /dev/null || { echo "Docker Compose dependencies are invalid"; exit 1; }
 
       - name: Save Docker configuration for review (optional)
         uses: actions/upload-artifact@v4
