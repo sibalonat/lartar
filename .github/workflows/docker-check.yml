@@ -46,7 +46,7 @@ jobs:
 
       - name: Build Docker images
         run: |
-          sail build --no-cache
+          docker-compose build --build-arg INCLUDE_USER_SETUP=false
 
       # - name: Run Docker containers
       #   run: |
