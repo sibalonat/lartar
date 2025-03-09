@@ -99,8 +99,12 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
 
 # Create the render group and add sail user to it
-RUN groupadd --system render
-RUN usermod -aG render sail
+RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
+        groupadd --system render && \
+        usermod -aG render sail; \
+    fi
+# RUN groupadd --system render
+# RUN usermod -aG render sail
 
 # Copy configuration files
 COPY start-container /usr/local/bin/start-container
