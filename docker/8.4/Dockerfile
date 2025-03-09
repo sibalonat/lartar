@@ -86,6 +86,7 @@ ENV DISPLAY=:99
 # RUN userdel -r ubuntu
 # RUN groupadd --force -g $WWWGROUP sail
 # RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
+
 # Conditionally remove the default Ubuntu user and create the sail user
 RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
         userdel -r ubuntu && \
