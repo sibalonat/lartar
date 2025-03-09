@@ -44,6 +44,14 @@ jobs:
           # List all services to check dependencies
           docker-compose config --services > /dev/null || { echo "Docker Compose dependencies are invalid"; exit 1; }
 
+      - name: Build Docker images
+        run: |
+          docker-compose build
+
+      # - name: Run Docker containers
+      #   run: |
+      #     docker-compose up -d
+
       - name: Save Docker configuration for review (optional)
         uses: actions/upload-artifact@v4
         with:
