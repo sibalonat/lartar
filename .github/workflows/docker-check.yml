@@ -39,7 +39,7 @@ jobs:
           command -v docker-compose &> /dev/null || { echo "Docker Compose is not installed"; exit 1; }
 
           # Validate the syntax of docker-compose.yml
-          docker-compose config --validate > /dev/null || { echo "Docker Compose file is invalid"; exit 1; }
+          docker-compose config > /dev/null || { echo "Docker Compose file is invalid"; exit 1; }
 
           # Check if all dependencies are valid
           docker-compose dependency list --check > /dev/null || { echo "Docker Compose dependencies are invalid"; exit 1; }
