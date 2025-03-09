@@ -130,9 +130,12 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
     fi
 
 # Create necessary directories and set permissions
-RUN mkdir -p /tmp/runtime-dir && \
+RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
+    mkdir -p /tmp/runtime-dir && \
     chmod 700 /tmp/runtime-dir && \
-    chown sail:sail /tmp/runtime-dir
+    chown sail:sail /tmp/runtime-dir; \
+fi
+
 
 # Copy configuration files
 COPY start-container /usr/local/bin/start-container
