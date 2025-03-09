@@ -32,11 +32,6 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y &&
     . $HOME/.cargo/env && \
     rustup default stable
 
-# Ensure the Cargo bin directory is in the PATH
-ENV PATH="/root/.cargo/bin:${PATH}"
-
-ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-
 # Configure apt for better package management
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
     echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
@@ -63,7 +58,7 @@ RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e5394
     librsvg2-bin fswatch ffmpeg nano \
     libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev \
     libgl1 libegl1 libgbm1 libglvnd0 libglx0 libgles2 libglu1-mesa \
-    libsoup2.4-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev \
+    libsoup2.4-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev xvfb \
     && npm install -g npm \
     && npm install -g pnpm \
     && npm install -g bun \
@@ -78,6 +73,12 @@ RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e5394
     && apt-get -y autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Ensure the Cargo bin directory is in the PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
+ENV DISPLAY=:99
 
 # Remove the default Ubuntu user and create the sail user
 RUN userdel -r ubuntu
