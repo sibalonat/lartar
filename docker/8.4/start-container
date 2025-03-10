@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# filepath: /home/mnplus/work/LARAVEL/lartar/docker/8.4/start-container
 
 # Set HOME environment variable explicitly for sail user
 if [ "$SUPERVISOR_PHP_USER" = "sail" ]; then
@@ -18,71 +19,18 @@ export XDG_CACHE_HOME=/home/sail/.cache
 mkdir -p $XDG_DATA_HOME $XDG_CONFIG_HOME $XDG_CACHE_HOME
 chown -R sail:sail $XDG_DATA_HOME $XDG_CONFIG_HOME $XDG_CACHE_HOME
 
-# Set up Mesa/OpenGL environment variables for software rendering
+# Create log directory for Tauri output
+mkdir -p /var/www/html/storage/logs/tauri
+chmod -R 777 /var/www/html/storage/logs/tauri
+
+# Set standard environment variables
 export LIBGL_ALWAYS_SOFTWARE=1
 export MESA_LOADER_DRIVER_OVERRIDE=swrast
 export EGL_PLATFORM=surfaceless
 export LIBGL_DRI3_DISABLE=1
-export RUST_BACKTRACE=1
-
-# Make sure .cargo/bin is in PATH
-if [ -d "/home/sail/.cargo/bin" ]; then
-    export PATH="/home/sail/.cargo/bin:$PATH"
-fi
-
-# Kill any existing Xvfb processes
-pkill Xvfb || true
-
-# Instead of using /tmp/.X11-unix, create our own directory
-mkdir -p /var/run/x11-unix
-chmod 1777 /var/run/x11-unix
-
-# Start Xvfb with custom socket path
-echo "Starting Xvfb with custom socket path..."
-export X11_UNIX_PATH=/var/run/x11-unix
-Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset -nolisten tcp -auth /var/run/xauth \
-    -fp /usr/share/fonts/X11/misc -sockdir /var/run > /var/log/xvfb.log 2>&1 &
-XVFB_PID=$!
-echo "Started Xvfb with PID $XVFB_PID"
-
-# Give Xvfb time to start
-sleep 3
-
-# Check if Xvfb is running
-if ps -p $XVFB_PID > /dev/null; then
-    echo "Xvfb started successfully"
-    if [ -e /var/run/x11-unix/X99 ]; then
-        chmod 1777 /var/run/x11-unix/X99
-        echo "X99 socket permissions set"
-    else
-        echo "X99 socket not found at /var/run/x11-unix/X99"
-        # List all X sockets
-        find /var/run -name "X*" -type s
-    fi
-else
-    echo "Xvfb failed to start. Check the logs at /var/log/xvfb.log"
-    cat /var/log/xvfb.log
-fi
-
-# Create a new .Xauthority file
-touch /home/sail/.Xauthority
-chown sail:sail /home/sail/.Xauthority
-chmod 600 /home/sail/.Xauthority
-
-# Set display variable to use our custom socket path
 export DISPLAY=:99
 
-# Test X server
-echo "Testing X server..."
-DISPLAY=:99 xdpyinfo > /var/log/xdpyinfo.log 2>&1
-if [ $? -eq 0 ]; then
-    echo "X server is working!"
-else
-    echo "X server test failed"
-    cat /var/log/xdpyinfo.log
-fi
-
-# Set up standard environment
+# Standard setup follows
 if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then
     echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
     exit 1
@@ -103,10 +51,6 @@ if [ -d /var/www/html/src-tauri ]; then
     chown -R sail:sail /var/www/html/src-tauri
 fi
 
-# Create log directory for Tauri output
-mkdir -p /var/www/html/storage/logs/tauri
-chmod -R 777 /var/www/html/storage/logs/tauri
-
 # Create .cargo directory for sail user if it doesn't exist
 if [ ! -d /home/sail/.cargo ]; then
     mkdir -p /home/sail/.cargo
@@ -116,8 +60,10 @@ if [ ! -d /home/sail/.cargo ]; then
     chown -R sail:sail /home/sail/.cargo
 fi
 
-# Update supervisord.conf to use the correct DISPLAY
-sed -i "s|DISPLAY=\":99\"|DISPLAY=\":99\"|g" /etc/supervisor/conf.d/supervisord.conf
+# Make sure .cargo/bin is in PATH
+if [ -d "/home/sail/.cargo/bin" ]; then
+    export PATH="/home/sail/.cargo/bin:$PATH"
+fi
 
 # Run supervisord
 if [ $# -gt 0 ]; then

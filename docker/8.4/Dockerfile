@@ -12,7 +12,7 @@ WORKDIR /var/www/html
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 ENV SUPERVISOR_PHP_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan serve --host=0.0.0.0 --port=80"
-ENV TAURI_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan serve:desktop"
+# ENV TAURI_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan serve:desktop --keep-running'"
 ENV SUPERVISOR_PHP_USER="sail"
 ARG INCLUDE_USER_SETUP=true
 
@@ -30,15 +30,22 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get update \
     && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y && \
-    echo 'export PATH=$HOME/.cargo/bin:$PATH' >> $HOME/.bashrc && \
-    . $HOME/.cargo/env && \
-    rustup default stable
+# RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y && \
+#     echo 'export PATH=$HOME/.cargo/bin:$PATH' >> $HOME/.bashrc && \
+#     . $HOME/.cargo/env && \
+#     rustup default stable
 
 # Configure apt for better package management
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
     echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
     echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
+
+# Add this section to your Dockerfile to properly set up Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    . $HOME/.cargo/env && \
+    rustup default stable && \
+    rustup component add rust-src && \
+    cargo install tauri-cli
 
 # Install system dependencies
 RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
@@ -121,6 +128,9 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
         groupadd --force -g $WWWGROUP sail && \
         useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail; \
     fi
+# RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
+#         userdel -r ubuntu; \
+#     fi
 
 # Allow PHP to bind to low-numbered ports
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
@@ -138,13 +148,25 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
     chown sail:sail /tmp/runtime-dir; \
 fi
 
+# RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
+#     mkdir -p /home/sail/.cargo && \
+#     cp -r /root/.cargo/* /home/sail/.cargo/ && \
+#     chown -R sail:sail /home/sail/.cargo && \
+#     rustup default stable && \
+#     echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /home/sail/.bashrc; \
+# fi
 RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
+    # Copy Rust setup to sail user
     mkdir -p /home/sail/.cargo && \
-    cp -r /root/.cargo/* /home/sail/.cargo/ && \
-    chown -R sail:sail /home/sail/.cargo && \
-    rustup default stable && \
-    echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /home/sail/.bashrc; \
+    cp -r $HOME/.cargo/* /home/sail/.cargo/ && \
+    mkdir -p /home/sail/.rustup && \
+    cp -r $HOME/.rustup/* /home/sail/.rustup/ && \
+    chown -R sail:sail /home/sail/.cargo /home/sail/.rustup; \
 fi
+
+COPY tauri-run.sh /usr/local/bin/tauri-run.sh
+RUN chmod +x /usr/local/bin/tauri-run.sh
+ENV TAURI_COMMAND="/usr/local/bin/tauri-run.sh"
 
 # Copy configuration files
 COPY start-container /usr/local/bin/start-container

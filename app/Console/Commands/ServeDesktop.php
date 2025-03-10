@@ -16,7 +16,7 @@ class ServeDesktop extends Command
      *
      * @var string
      */
-    protected $signature = 'serve:desktop';
+    protected $signature = 'serve:desktop {--keep-alive : Keep the process running after launching Tauri}';
 
     /**
      * The console command description.
@@ -36,29 +36,66 @@ class ServeDesktop extends Command
 
         $this->initViteServer();
         $this->initTauriServer();
+
+        // After starting Tauri, add this:
+        if ($this->option('keep-alive')) {
+            $this->info('Keeping the process alive...');
+            while (true) {
+                sleep(60);
+            }
+        }
+
+        return 0;
     }
 
-    private function initTauriServer() : void
+    // private function initTauriServer() : void
+    // {
+    //     note( 'Starting Desktop App' );
+    //     $tauriPath = base_path('src-tauri');
+    //     note( 'Starting Desktop App at ' . $tauriPath );
+
+    //     if (!File::exists($tauriPath . '/Cargo.toml')) {
+    //         throw new \RuntimeException("Cargo.toml not found in src-tauri directory. Please add it to your project.");
+    //     }
+
+    //     note( 'File ' . File::exists( $tauriPath . '/target'  ) );
+
+    //     if( !File::exists( $tauriPath . '/target'  ) )
+    //     {
+    //         // ->tty()
+    //         Process::path( $tauriPath )->forever()->run( "cargo build" );
+    //     }
+
+    //     // ->tty()
+
+    //     Process::forever()->run( "npm run dev:tauri:desktop -- --port=50003" );
+    // }
+    private function initTauriServer(): void
     {
-        note( 'Starting Desktop App' );
+        note('Starting Desktop App');
         $tauriPath = base_path('src-tauri');
-        note( 'Starting Desktop App at ' . $tauriPath );
+        note('Starting Desktop App at ' . $tauriPath);
 
         if (!File::exists($tauriPath . '/Cargo.toml')) {
             throw new \RuntimeException("Cargo.toml not found in src-tauri directory. Please add it to your project.");
         }
 
-        note( 'File ' . File::exists( $tauriPath . '/target'  ) );
+        note('File ' . File::exists($tauriPath . '/target'));
 
-        if( !File::exists( $tauriPath . '/target'  ) )
-        {
-            // ->tty()
-            Process::path( $tauriPath )->forever()->run( "cargo build" );
+        if (!File::exists($tauriPath . '/target')) {
+            // Build using system command - this is blocking
+            $this->info("Building Tauri target...");
+            system("cd $tauriPath && cargo build", $result);
+            if ($result !== 0) {
+                throw new \RuntimeException("Failed to build Tauri target, error code: $result");
+            }
         }
 
-        // ->tty()
+        // Run the Tauri command using system - this will block until Tauri exits
+        $this->info("Launching Tauri application...");
+        passthru("cd " . base_path() . " && DISPLAY=:99 npm run dev:tauri:desktop -- --port=50003", $result);
 
-        Process::forever()->run( "npm run dev:tauri:desktop -- --port=50003" );
+        $this->info("Tauri process exited with code: $result");
     }
 
     private function initViteServer() : void
