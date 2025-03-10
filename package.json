@@ -2,10 +2,10 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "tauri" : "tauri",
         "build": "vite build",
         "dev": "vite",
         "dev:vite:web": "vite --config vite.web.config.js",
-        "tauri": "tauri",
         "dev:vite:desktop": "vite --config vite.desktop.config.js",
         "dev:tauri:desktop": "tauri dev"
     },

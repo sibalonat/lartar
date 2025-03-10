@@ -31,6 +31,8 @@ class ServeDesktop extends Command
     {
         intro( 'Running Desktop Environment' );
 
+        $this->setupEnvironment();
+
         $this->initViteServer();
         $this->initTauriServer();
     }
@@ -65,10 +67,17 @@ class ServeDesktop extends Command
         Process::start( "npm run dev:vite:desktop" );
     }
 
-    private function buildCargo() : void
+    private function setupEnvironment(): void
     {
-        note( "Starting Vite Development Server" );
+        note("Setting up environment for Tauri");
+        $this->logDebug("Setting up environment variables");
 
-        Process::start( "npm run dev:vite:desktop" );
+        // Fix cargo permissions if needed
+        if (!is_writable(getenv('HOME') . '/.cargo')) {
+            $this->logToFile("Fixing cargo permissions");
+            shell_exec('mkdir -p $HOME/.cargo && chmod -R 755 $HOME/.cargo');
+        }
+
+        // Rest of your code...
     }
 }

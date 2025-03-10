@@ -83,6 +83,7 @@ RUN apt-get update && apt-get install -y \
     mesa-utils \
     x11-apps \
     xauth \
+    x11-xserver-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Ensure the Cargo bin directory is in the PATH
@@ -134,6 +135,14 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
     mkdir -p /tmp/runtime-dir && \
     chmod 700 /tmp/runtime-dir && \
     chown sail:sail /tmp/runtime-dir; \
+fi
+
+RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
+    mkdir -p /home/sail/.cargo && \
+    cp -r /root/.cargo/* /home/sail/.cargo/ && \
+    chown -R sail:sail /home/sail/.cargo && \
+    rustup default stable && \
+    echo 'export PATH=$HOME/.cargo/bin:$PATH' >> /home/sail/.bashrc; \
 fi
 
 # Copy configuration files

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-xhost +local:docker
+# xhost +local:docker
 # Create XDG runtime directory
 export XDG_RUNTIME_DIR=/tmp/runtime-dir
 mkdir -p $XDG_RUNTIME_DIR
@@ -17,6 +17,12 @@ export LIBGL_ALWAYS_SOFTWARE=1
 export MESA_LOADER_DRIVER_OVERRIDE=swrast
 export EGL_PLATFORM=surfaceless
 export LIBGL_DRI3_DISABLE=1
+export RUST_BACKTRACE=1
+
+# Make sure .cargo/bin is in PATH
+if [ -d "/home/sail/.cargo/bin" ]; then
+    export PATH="/home/sail/.cargo/bin:$PATH"
+fi
 
 # Only set CI=true if we're explicitly building, not for dev
 if [[ "$*" == *"tauri build"* ]]; then
@@ -27,12 +33,14 @@ else
     export LARAVEL_BYPASS_ENV_CHECK=1
 fi
 
-# Start Xvfb
-Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-XVFB_PID=$!
-
-# Wait a moment for Xvfb to start
-sleep 1
+# Start Xvfb only if it's not running
+if ! pgrep -x "Xvfb" > /dev/null; then
+    Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
+    sleep 2
+    echo "Started Xvfb"
+else
+    echo "Xvfb is already running"
+fi
 
 if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then
     echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
@@ -59,6 +67,15 @@ if [ ! -d /.composer ]; then
 fi
 
 chmod -R ugo+rw /.composer
+
+# Set permissions for sail user on src-tauri directory if it exists
+if [ -d /var/www/html/src-tauri ]; then
+    chown -R sail:sail /var/www/html/src-tauri
+fi
+
+# Create log directory for Tauri output
+mkdir -p /var/www/html/storage/logs/tauri
+chmod -R 777 /var/www/html/storage/logs/tauri
 
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
