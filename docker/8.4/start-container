@@ -1,34 +1,21 @@
 #!/bin/bash
-# filepath: /home/mnplus/work/LARAVEL/lartar/docker/8.4/start-container
 
 # Set HOME environment variable explicitly for sail user
 if [ "$SUPERVISOR_PHP_USER" = "sail" ]; then
     export HOME="/home/sail"
 fi
 
-# Create XDG runtime directory
-export XDG_RUNTIME_DIR=/tmp/runtime-dir
-mkdir -p $XDG_RUNTIME_DIR
-chmod 700 $XDG_RUNTIME_DIR
-chown sail:sail $XDG_RUNTIME_DIR
+if [[ -n "$WSL_DISTRO_NAME" || -f /proc/sys/fs/binfmt_misc/WSLInterop ]]; then
+    echo "WSL detected, configuring X11..."
 
-# Set up other XDG directories
-export XDG_DATA_HOME=/home/sail/.local/share
-export XDG_CONFIG_HOME=/home/sail/.config
-export XDG_CACHE_HOME=/home/sail/.cache
-mkdir -p $XDG_DATA_HOME $XDG_CONFIG_HOME $XDG_CACHE_HOME
-chown -R sail:sail $XDG_DATA_HOME $XDG_CONFIG_HOME $XDG_CACHE_HOME
+    # Create Xauthority file
+    touch /home/sail/.Xauthority
+    chown sail:sail /home/sail/.Xauthority
 
-# Create log directory for Tauri output
-mkdir -p /var/www/html/storage/logs/tauri
-chmod -R 777 /var/www/html/storage/logs/tauri
-
-# Set standard environment variables
-export LIBGL_ALWAYS_SOFTWARE=1
-export MESA_LOADER_DRIVER_OVERRIDE=swrast
-export EGL_PLATFORM=surfaceless
-export LIBGL_DRI3_DISABLE=1
-export DISPLAY=:99
+    # Ensure X11 directories exist with proper permissions
+    mkdir -p /tmp/.X11-unix
+    chmod 1777 /tmp/.X11-unix
+fi
 
 # Standard setup follows
 if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then
@@ -45,25 +32,6 @@ if [ ! -d /.composer ]; then
 fi
 
 chmod -R ugo+rw /.composer
-
-# Set permissions for sail user on src-tauri directory if it exists
-if [ -d /var/www/html/src-tauri ]; then
-    chown -R sail:sail /var/www/html/src-tauri
-fi
-
-# Create .cargo directory for sail user if it doesn't exist
-if [ ! -d /home/sail/.cargo ]; then
-    mkdir -p /home/sail/.cargo
-    if [ -d /root/.cargo ]; then
-        cp -r /root/.cargo/* /home/sail/.cargo/ || true
-    fi
-    chown -R sail:sail /home/sail/.cargo
-fi
-
-# Make sure .cargo/bin is in PATH
-if [ -d "/home/sail/.cargo/bin" ]; then
-    export PATH="/home/sail/.cargo/bin:$PATH"
-fi
 
 # Run supervisord
 if [ $# -gt 0 ]; then

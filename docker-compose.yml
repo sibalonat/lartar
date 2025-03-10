@@ -13,21 +13,30 @@ services:
             - '${APP_PORT:-80}:80'
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
             - "50003:50003"
-            # - '${VITE_SSL_PORT:-443}:${VITE_SSL_PORT:-443}'
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
-            DISPLAY: ${DISPLAY:-:0}
+            MESA_LOADER_DRIVER_OVERRIDE: swrast
+            EGL_PLATFORM: surfaceless
+            # Dconf workarounds
+            GSETTINGS_BACKEND: memory
+            DCONF_PROFILE: /dev/null
+            # Tauri settings
+            TAURI_SKIP_DEVSERVER_CHECK: 1
+            TAURI_CLI_SKIP_SLOW_DEVICES_CHECK: 1
+            RUSTFLAGS: "--cfg=web_sys_unstable_apis"
         volumes:
             - '.:/var/www/html'
+            - '/tmp/.X11-unix:/tmp/.X11-unix'
+            # Optional but recommended for WSL X server
+            - "${HOME}/.Xauthority:/home/sail/.Xauthority:ro"
         networks:
             - sail
         depends_on:
             - mysql
-        # command: bash -c "php artisan serve:web & php artisan serve:desktop"
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost"]
             retries: 3

@@ -98,7 +98,7 @@ RUN apt-get update && apt-get install -y \
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-ENV DISPLAY=:99
+ENV DISPLAY=:0
 
 # Add this to your Dockerfile or set in your environment
 ENV RUSTFLAGS=--cfg=web_sys_unstable_apis
@@ -111,7 +111,9 @@ ENV CI=true
 ENV LARAVEL_BYPASS_ENV_CHECK=1
 
 # Set up XDG directories
-ENV XDG_RUNTIME_DIR=/tmp/runtime-dir
+# ENV XDG_RUNTIME_DIR=/tmp/runtime-dir
+ENV GSETTINGS_BACKEND=memory
+ENV DCONF_PROFILE=/dev/null
 ENV XDG_DATA_HOME=/home/sail/.local/share
 ENV XDG_CONFIG_HOME=/home/sail/.config
 ENV XDG_CACHE_HOME=/home/sail/.cache
@@ -128,9 +130,6 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
         groupadd --force -g $WWWGROUP sail && \
         useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail; \
     fi
-# RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
-#         userdel -r ubuntu; \
-#     fi
 
 # Allow PHP to bind to low-numbered ports
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4

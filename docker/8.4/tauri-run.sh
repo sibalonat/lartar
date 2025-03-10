@@ -1,20 +1,38 @@
 #!/bin/bash
-# filepath: /home/mnplus/work/LARAVEL/lartar/docker/8.4/tauri-run.sh
+# Use WSL-specific display configuration
+export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0.0
+echo "Setting DISPLAY=$DISPLAY for WSL"
 
-cd /var/www/html
-
-# Set environment variables
-export DISPLAY=:99
+# Configure GPU rendering settings
 export LIBGL_ALWAYS_SOFTWARE=1
 export MESA_LOADER_DRIVER_OVERRIDE=swrast
 export EGL_PLATFORM=surfaceless
-export XDG_RUNTIME_DIR=/tmp/runtime-dir
-export HOME=/home/sail
-export RUST_BACKTRACE=1
+
+# Configure dconf alternatives
+export GSETTINGS_BACKEND=memory
+export DCONF_PROFILE=/dev/null
+
+# Debug info
+echo "Starting Tauri app with the following configuration:"
+echo "User: $(whoami)"
+echo "Display: $DISPLAY"
+echo "Working directory: $(pwd)"
+
+cd /var/www/html
 
 echo "Starting Desktop App..."
-# The --keep-alive is a custom flag we'll add to our command
-php artisan serve:desktop --keep-alive > /var/www/html/storage/logs/tauri/tauri.log 2>&1
+
+# Make sure logs directory exists
+mkdir -p /var/www/html/storage/logs/tauri
+
+# Run the application with proper permissions - just once!
+if [ "$(whoami)" = "sail" ]; then
+    # If running as sail user - add cargo to PATH
+    PATH="$HOME/.cargo/bin:$PATH" php artisan serve:desktop --keep-alive > /var/www/html/storage/logs/tauri/tauri.log 2>&1
+else
+    # If running as root, switch to sail
+    gosu sail bash -c 'PATH="$HOME/.cargo/bin:$PATH" php artisan serve:desktop --keep-alive > /var/www/html/storage/logs/tauri/tauri.log 2>&1'
+fi
 
 # Even if the command exits, keep the process running so supervisor doesn't restart it
 echo "Tauri process completed. Keeping container alive."
