@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\intro;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
@@ -70,7 +71,7 @@ class ServeDesktop extends Command
     private function setupEnvironment(): void
     {
         note("Setting up environment for Tauri");
-        $this->logDebug("Setting up environment variables");
+        Log::info("Setting up environment variables");
 
         // Fix cargo permissions if needed
         if (!is_writable(getenv('HOME') . '/.cargo')) {

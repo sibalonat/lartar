@@ -65,6 +65,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'tauri' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/tauri/tauri.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
