@@ -71,11 +71,10 @@ class ServeDesktop extends Command
     private function setupEnvironment(): void
     {
         note("Setting up environment for Tauri");
-        Log::info("Setting up environment variables");
 
         // Fix cargo permissions if needed
         if (!is_writable(getenv('HOME') . '/.cargo')) {
-            $this->logToFile("Fixing cargo permissions");
+            Log::info("Fixing cargo permissions");
             shell_exec('mkdir -p $HOME/.cargo && chmod -R 755 $HOME/.cargo');
         }
 
