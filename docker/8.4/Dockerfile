@@ -83,6 +83,7 @@ RUN apt-get update && apt-get install -y \
     mesa-utils \
     x11-apps \
     xauth \
+    x11-utils \
     x11-xserver-utils \
     && rm -rf /var/lib/apt/lists/*
 

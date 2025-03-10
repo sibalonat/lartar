@@ -73,11 +73,28 @@ class ServeDesktop extends Command
         note("Setting up environment for Tauri");
 
         // Fix cargo permissions if needed
-        if (!is_writable(getenv('HOME') . '/.cargo')) {
-            Log::info("Fixing cargo permissions");
-            shell_exec('mkdir -p $HOME/.cargo && chmod -R 755 $HOME/.cargo');
+        $homeDir = getenv('HOME');
+        $cargoDir = $homeDir . '/.cargo';
+
+        if (!is_dir($cargoDir)) {
+            Log::info("Creating cargo directory in $cargoDir");
+            shell_exec("mkdir -p $cargoDir && chmod -R 755 $cargoDir");
         }
 
-        // Rest of your code...
+        if (!is_writable($cargoDir)) {
+            Log::info("Fixing cargo permissions for $cargoDir");
+            shell_exec("chmod -R 755 $cargoDir");
+        }
+
+        // Create log directory for debugging
+        $logDir = storage_path('logs/tauri');
+        if (!File::exists($logDir)) {
+            File::makeDirectory($logDir, 0777, true);
+        }
+
+        // Debug information
+        Log::info("HOME directory: " . getenv('HOME'));
+        Log::info("XDG_RUNTIME_DIR: " . getenv('XDG_RUNTIME_DIR'));
+        Log::info("DISPLAY: " . getenv('DISPLAY'));
     }
 }

@@ -23,8 +23,6 @@ services:
             DISPLAY: ${DISPLAY:-:0}
         volumes:
             - '.:/var/www/html'
-            - '/tmp/.X11-unix:/tmp/.X11-unix'
-            - ~/.Xauthority:/home/sail/.Xauthority
         networks:
             - sail
         depends_on:

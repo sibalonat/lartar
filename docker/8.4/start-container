@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
-# xhost +local:docker
+# Set HOME environment variable explicitly for sail user
+if [ "$SUPERVISOR_PHP_USER" = "sail" ]; then
+    export HOME="/home/sail"
+fi
+
 # Create XDG runtime directory
 export XDG_RUNTIME_DIR=/tmp/runtime-dir
 mkdir -p $XDG_RUNTIME_DIR
 chmod 700 $XDG_RUNTIME_DIR
+chown sail:sail $XDG_RUNTIME_DIR
 
 # Set up other XDG directories
 export XDG_DATA_HOME=/home/sail/.local/share
 export XDG_CONFIG_HOME=/home/sail/.config
 export XDG_CACHE_HOME=/home/sail/.cache
 mkdir -p $XDG_DATA_HOME $XDG_CONFIG_HOME $XDG_CACHE_HOME
+chown -R sail:sail $XDG_DATA_HOME $XDG_CONFIG_HOME $XDG_CACHE_HOME
 
 # Set up Mesa/OpenGL environment variables for software rendering
 export LIBGL_ALWAYS_SOFTWARE=1
@@ -24,38 +30,62 @@ if [ -d "/home/sail/.cargo/bin" ]; then
     export PATH="/home/sail/.cargo/bin:$PATH"
 fi
 
-# Only set CI=true if we're explicitly building, not for dev
-if [[ "$*" == *"tauri build"* ]]; then
-    export CI=true
+# Kill any existing Xvfb processes
+pkill Xvfb || true
+
+# Instead of using /tmp/.X11-unix, create our own directory
+mkdir -p /var/run/x11-unix
+chmod 1777 /var/run/x11-unix
+
+# Start Xvfb with custom socket path
+echo "Starting Xvfb with custom socket path..."
+export X11_UNIX_PATH=/var/run/x11-unix
+Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset -nolisten tcp -auth /var/run/xauth \
+    -fp /usr/share/fonts/X11/misc -sockdir /var/run > /var/log/xvfb.log 2>&1 &
+XVFB_PID=$!
+echo "Started Xvfb with PID $XVFB_PID"
+
+# Give Xvfb time to start
+sleep 3
+
+# Check if Xvfb is running
+if ps -p $XVFB_PID > /dev/null; then
+    echo "Xvfb started successfully"
+    if [ -e /var/run/x11-unix/X99 ]; then
+        chmod 1777 /var/run/x11-unix/X99
+        echo "X99 socket permissions set"
+    else
+        echo "X99 socket not found at /var/run/x11-unix/X99"
+        # List all X sockets
+        find /var/run -name "X*" -type s
+    fi
 else
-    # For development purposes, allow Laravel Vite to run
-    export CI=false
-    export LARAVEL_BYPASS_ENV_CHECK=1
+    echo "Xvfb failed to start. Check the logs at /var/log/xvfb.log"
+    cat /var/log/xvfb.log
 fi
 
-# Start Xvfb only if it's not running
-if ! pgrep -x "Xvfb" > /dev/null; then
-    Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
-    sleep 2
-    echo "Started Xvfb"
+# Create a new .Xauthority file
+touch /home/sail/.Xauthority
+chown sail:sail /home/sail/.Xauthority
+chmod 600 /home/sail/.Xauthority
+
+# Set display variable to use our custom socket path
+export DISPLAY=:99
+
+# Test X server
+echo "Testing X server..."
+DISPLAY=:99 xdpyinfo > /var/log/xdpyinfo.log 2>&1
+if [ $? -eq 0 ]; then
+    echo "X server is working!"
 else
-    echo "Xvfb is already running"
+    echo "X server test failed"
+    cat /var/log/xdpyinfo.log
 fi
 
+# Set up standard environment
 if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then
     echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
     exit 1
-fi
-
-# Set up X11 permissions
-if [ -f /home/sail/.Xauthority ]; then
-    chmod 600 /home/sail/.Xauthority
-    chown sail:sail /home/sail/.Xauthority
-fi
-
-# Set up video device permissions
-if [ -e /dev/dri ]; then
-    chmod 666 /dev/dri/*
 fi
 
 if [ ! -z "$WWWUSER" ]; then
@@ -77,6 +107,19 @@ fi
 mkdir -p /var/www/html/storage/logs/tauri
 chmod -R 777 /var/www/html/storage/logs/tauri
 
+# Create .cargo directory for sail user if it doesn't exist
+if [ ! -d /home/sail/.cargo ]; then
+    mkdir -p /home/sail/.cargo
+    if [ -d /root/.cargo ]; then
+        cp -r /root/.cargo/* /home/sail/.cargo/ || true
+    fi
+    chown -R sail:sail /home/sail/.cargo
+fi
+
+# Update supervisord.conf to use the correct DISPLAY
+sed -i "s|DISPLAY=\":99\"|DISPLAY=\":99\"|g" /etc/supervisor/conf.d/supervisord.conf
+
+# Run supervisord
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
         exec "$@"
@@ -84,5 +127,6 @@ if [ $# -gt 0 ]; then
         exec gosu $WWWUSER "$@"
     fi
 else
+    echo "Starting supervisord..."
     exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 fi
