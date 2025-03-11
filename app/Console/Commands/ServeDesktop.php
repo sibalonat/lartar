@@ -57,21 +57,9 @@ class ServeDesktop extends Command
         $env = "CI=true ";
         $env .= "TAURI_CLI_NO_DEV_SERVER_WAIT=true ";
 
-        if (!$headless) {
-            // Only needed for non-headless mode
-            $env .= "DISPLAY=:99 ";
-            $env .= "LIBGL_ALWAYS_SOFTWARE=1 ";
-            $env .= "MESA_LOADER_DRIVER_OVERRIDE=swrast ";
-            $env .= "GDK_BACKEND=x11 ";
-        }
-
         // Launch with or without headless flag
         $this->info("Launching Tauri application...");
-        if ($headless) {
-            passthru("cd " . base_path() . " && $env npm run dev:tauri:desktop -- -- --headless", $result);
-        } else {
-            passthru("cd " . base_path() . " && $env npm run dev:tauri:desktop -- --port=50003", $result);
-        }
+        passthru("cd " . base_path() . " && $env npm run dev:tauri:desktop -- -- --port=50003", $result);
 
         $this->info("Tauri process exited with code: $result");
     }
