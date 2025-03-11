@@ -45,7 +45,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
     . $HOME/.cargo/env && \
     rustup default stable && \
     rustup component add rust-src && \
-    cargo install tauri-cli
+    cargo install tauri-cli@2 && \
+    cargo install tauri-driver
 
 # Install system dependencies
 RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
@@ -92,18 +93,32 @@ RUN apt-get update && apt-get install -y \
     xauth \
     x11-utils \
     x11-xserver-utils \
+    xvfb \
+    libgtk-3-0 \
+    libgtk-4-dev \
+    # Tauri 2 dependencies
+    libwebkit2gtk-4.1-dev \
+    libsoup-3.0-dev \
+    libjavascriptcoregtk-4.1-dev \
+    libadwaita-1-dev \
+    libglib2.0-dev \
+    dbus-x11 \
+    xdg-utils \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    patchelf \
     && rm -rf /var/lib/apt/lists/*
 
 # Ensure the Cargo bin directory is in the PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
-ENV DISPLAY=:0
+ENV DISPLAY=:99
 
 # Add this to your Dockerfile or set in your environment
 ENV RUSTFLAGS=--cfg=web_sys_unstable_apis
-ENV TAURI_SKIP_DEVSERVER_CHECK=1
-ENV TAURI_CLI_SKIP_SLOW_DEVICES_CHECK=1
+# ENV TAURI_SKIP_DEVSERVER_CHECK=1
+# ENV TAURI_CLI_SKIP_SLOW_DEVICES_CHECK=1
 # When building in CI
 ENV CI=true
 

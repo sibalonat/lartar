@@ -3,4 +3,6 @@ https://capsules.codes/en/blog/fyi/en-fyi-serve-a-laravel-project-on-web-desktop
 
 docker system prune -a -f --volumes
 
+sail build --no-cache
+
 docker builder prune
