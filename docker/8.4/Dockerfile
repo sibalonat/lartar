@@ -44,9 +44,7 @@ RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
     . $HOME/.cargo/env && \
     rustup default stable && \
-    rustup component add rust-src && \
-    cargo install tauri-cli@2 && \
-    cargo install tauri-driver
+    rustup component add rust-src
 
 # Install system dependencies
 RUN curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
