@@ -17,7 +17,9 @@ class ServeDesktop extends Command
      *
      * @var string
      */
-    protected $signature = 'serve:desktop {--headless : Run in headless mode} {--keep-alive : Keep the process running after launching Tauri} {--debug : Enable debug mode}';
+    protected $signature = 'serve:desktop';
+
+    // {--headless : Run in headless mode} {--keep-alive : Keep the process running after launching Tauri} {--debug : Enable debug mode}
 
     /**
      * The console command description.
@@ -33,25 +35,26 @@ class ServeDesktop extends Command
     {
         intro('Running Desktop Environment with Tauri 2');
 
-        $this->setupEnvironment();
+        $this->checkTauriProject();
+
         $this->initViteServer();
         $this->initTauriServer();
 
-        if ($this->option('keep-alive')) {
-            $this->info('Keeping the process alive...');
-            while (true) {
-                sleep(60);
-            }
-        }
+        // if ($this->option('keep-alive')) {
+        //     $this->info('Keeping the process alive...');
+        //     while (true) {
+        //         sleep(60);
+        //     }
+        // }
 
         return 0;
     }
 
     private function initTauriServer(): void
     {
-        $headless = $this->option('headless');
-        $mode = $headless ? 'Headless Mode' : 'Desktop App';
-        note("Starting $mode");
+        // $headless = $this->option('headless');
+        // $mode = $headless ? 'Headless Mode' : 'Desktop App';
+        // note("Starting $mode");
 
         // Set necessary environment variables
         $env = "CI=true ";
@@ -59,9 +62,23 @@ class ServeDesktop extends Command
 
         // Launch with or without headless flag
         $this->info("Launching Tauri application...");
-        passthru("cd " . base_path() . " && $env npm run dev:tauri:desktop -- -- --port=50003", $result);
+        // passthru("cd " . base_path() . " && $env npm run dev:tauri:desktop -- --port=50003", $result);
+        // Process::forever()->tty()->run( "npm run dev:tauri:desktop -- --port=50003" );
 
-        $this->info("Tauri process exited with code: $result");
+        Log::info("Launching Tauri application...");
+
+        if( ! File::exists( base_path( 'src-tauri/target' ) ) )
+        {
+            Process::path( 'src-tauri' )->forever()->tty()->run( "cargo build" );
+        }
+
+        Log::info("Launching Tauri application...");
+
+        Process::forever()->tty()->run( "npm run dev:tauri:desktop -- --port=50003" );
+
+
+        // $this->info("Tauri process exited with code: $result");
+        $this->info("Tauri process exited ");
     }
 
     private function initViteServer(): void
@@ -70,48 +87,29 @@ class ServeDesktop extends Command
         Process::start("npm run dev:vite:desktop");
     }
 
-    private function setupEnvironment(): void
+    private function checkTauriProject(): void
     {
-        note("Setting up environment for Tauri 2");
+        $srcTauriDir = base_path('src-tauri');
+        $cargoToml = $srcTauriDir . '/Cargo.toml';
 
-        // Fix cargo permissions if needed
-        $homeDir = getenv('HOME');
-        $cargoDir = $homeDir . '/.cargo';
-        $runtimeDir = "/tmp/runtime-dir";
+        if (!File::exists($srcTauriDir)) {
+            $this->error("src-tauri directory not found! Initializing Tauri project...");
 
-        if (!is_dir($cargoDir)) {
-            Log::info("Creating cargo directory in $cargoDir");
-            shell_exec("mkdir -p $cargoDir && chmod -R 755 $cargoDir");
+            // Run tauri init
+            passthru("cd " . base_path() . " && npx tauri init", $result);
+
+            if ($result !== 0) {
+                $this->error("Failed to initialize Tauri project. Please run 'npx tauri init' manually.");
+                exit(1);
+            }
+        } elseif (!File::exists($cargoToml)) {
+            $this->error("Cargo.toml not found in src-tauri directory.");
+            $this->info("Attempting to repair Tauri project structure...");
+
+            // Run tauri init again to repair
+            passthru("cd " . base_path() . " && npx tauri init", $result);
         }
 
-        if (!is_writable($cargoDir)) {
-            Log::info("Fixing cargo permissions for $cargoDir");
-            shell_exec("chmod -R 755 $cargoDir");
-        }
-
-        // Ensure runtime directory exists with proper permissions
-        shell_exec("mkdir -p $runtimeDir && chmod 700 $runtimeDir");
-
-        // Create log directory for debugging
-        $logDir = storage_path('logs/tauri');
-        if (!File::exists($logDir)) {
-            File::makeDirectory($logDir, 0777, true);
-        }
-
-        // Test X server
-        $this->info("Testing X server connection...");
-        $xServerOutput = shell_exec("DISPLAY=:99 xdpyinfo 2>&1");
-
-        if (strpos($xServerOutput, 'unable to open display') !== false) {
-            $this->warn("X server not available. Check if Xvfb is running properly.");
-            $this->warn("Xvfb status: " . shell_exec("ps aux | grep Xvfb"));
-        } else {
-            $this->info("X server connection confirmed.");
-        }
-
-        // Debug information
-        Log::info("HOME directory: " . getenv('HOME'));
-        Log::info("XDG_RUNTIME_DIR: " . $runtimeDir);
-        Log::info("DISPLAY: " . getenv('DISPLAY'));
+        $this->info("Tauri project structure verified!");
     }
 }
