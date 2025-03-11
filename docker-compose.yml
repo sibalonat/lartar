@@ -18,20 +18,15 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
-            MESA_LOADER_DRIVER_OVERRIDE: swrast
-            EGL_PLATFORM: surfaceless
-            # Dconf workarounds
+            # Remove X11 related variables
             GSETTINGS_BACKEND: memory
             DCONF_PROFILE: /dev/null
             # Tauri settings
-            TAURI_SKIP_DEVSERVER_CHECK: 1
-            TAURI_CLI_SKIP_SLOW_DEVICES_CHECK: 1
+            TAURI_CLI_NO_DEV_SERVER_WAIT: true
+            CI: true
             RUSTFLAGS: "--cfg=web_sys_unstable_apis"
         volumes:
             - '.:/var/www/html'
-            - '/tmp/.X11-unix:/tmp/.X11-unix'
-            # Optional but recommended for WSL X server
-            - "${HOME}/.Xauthority:/home/sail/.Xauthority:ro"
         networks:
             - sail
         depends_on:

@@ -17,7 +17,7 @@ class ServeDesktop extends Command
      *
      * @var string
      */
-    protected $signature = 'serve:desktop {--keep-alive : Keep the process running after launching Tauri} {--debug : Enable debug mode}';
+    protected $signature = 'serve:desktop {--headless : Run in headless mode} {--keep-alive : Keep the process running after launching Tauri} {--debug : Enable debug mode}';
 
     /**
      * The console command description.
@@ -49,31 +49,29 @@ class ServeDesktop extends Command
 
     private function initTauriServer(): void
     {
-        note('Starting Desktop App');
-        $tauriPath = base_path('src-tauri');
-        note('Starting Desktop App at ' . $tauriPath);
+        $headless = $this->option('headless');
+        $mode = $headless ? 'Headless Mode' : 'Desktop App';
+        note("Starting $mode");
 
-        if (!File::exists($tauriPath . '/Cargo.toml')) {
-            throw new \RuntimeException("Cargo.toml not found in src-tauri directory. Please add it to your project.");
+        // Set necessary environment variables
+        $env = "CI=true ";
+        $env .= "TAURI_CLI_NO_DEV_SERVER_WAIT=true ";
+
+        if (!$headless) {
+            // Only needed for non-headless mode
+            $env .= "DISPLAY=:99 ";
+            $env .= "LIBGL_ALWAYS_SOFTWARE=1 ";
+            $env .= "MESA_LOADER_DRIVER_OVERRIDE=swrast ";
+            $env .= "GDK_BACKEND=x11 ";
         }
 
-        // Set environment variables for Tauri 2
-        $env = [
-            'DISPLAY=:99',
-            'CI=true',
-            'TAURI_CLI_NO_DEV_SERVER_WAIT=true',
-            'RUST_BACKTRACE=' . ($this->option('debug') ? '1' : '0'),
-            'LIBGL_ALWAYS_SOFTWARE=1',
-            'MESA_LOADER_DRIVER_OVERRIDE=swrast',
-            'GDK_BACKEND=x11',
-            'TAURI_LINUX_AYATANA_APPINDICATOR=true',
-        ];
-
-        $envString = implode(' ', $env);
-
-        // For Tauri 2, we use cargo tauri directly
-        $this->info("Launching Tauri 2 application...");
-        passthru("cd " . base_path() . " && $envString npm run tauri dev -- -- --port=50003", $result);
+        // Launch with or without headless flag
+        $this->info("Launching Tauri application...");
+        if ($headless) {
+            passthru("cd " . base_path() . " && $env npm run dev:tauri:desktop -- -- --headless", $result);
+        } else {
+            passthru("cd " . base_path() . " && $env npm run dev:tauri:desktop -- --port=50003", $result);
+        }
 
         $this->info("Tauri process exited with code: $result");
     }
