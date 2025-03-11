@@ -61,7 +61,7 @@ class ServeDesktop extends Command
         $env = [
             'DISPLAY=:99',
             'CI=true',
-            'TAURI_CLI_NO_DEV_SERVER_WAIT=1',
+            'TAURI_CLI_NO_DEV_SERVER_WAIT=true',
             'RUST_BACKTRACE=' . ($this->option('debug') ? '1' : '0'),
             'LIBGL_ALWAYS_SOFTWARE=1',
             'MESA_LOADER_DRIVER_OVERRIDE=swrast',

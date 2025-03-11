@@ -5,17 +5,27 @@ if [ "$SUPERVISOR_PHP_USER" = "sail" ]; then
     export HOME="/home/sail"
 fi
 
-if [[ -n "$WSL_DISTRO_NAME" || -f /proc/sys/fs/binfmt_misc/WSLInterop ]]; then
-    echo "WSL detected, configuring X11..."
+# Configure X11 for all environments, not just WSL
+echo "Configuring X11 for Tauri..."
 
-    # Create Xauthority file
-    touch /home/sail/.Xauthority
-    chown sail:sail /home/sail/.Xauthority
+# Create Xauthority file
+touch /home/sail/.Xauthority
+chown sail:sail /home/sail/.Xauthority
 
-    # Ensure X11 directories exist with proper permissions
-    mkdir -p /tmp/.X11-unix
-    chmod 1777 /tmp/.X11-unix
-fi
+# Ensure X11 directories exist with proper permissions
+mkdir -p /tmp/.X11-unix
+chmod 1777 /tmp/.X11-unix
+xauth generate :99 . trusted 2>/dev/null || echo "xauth command failed, continuing anyway"
+
+# Set up runtime directory
+mkdir -p /tmp/runtime-dir
+chmod 700 /tmp/runtime-dir
+chown sail:sail /tmp/runtime-dir
+
+# Run Xvfb explicitly first to ensure it's ready
+Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset &
+sleep 2
+
 
 # Standard setup follows
 if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then

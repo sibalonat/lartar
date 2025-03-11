@@ -1,5 +1,4 @@
 #!/bin/bash
-# filepath: /home/mnplus/work/LARAVEL/lartar/docker/8.4/tauri-run.sh
 
 # Use a fixed display for Xvfb
 export DISPLAY=:99
@@ -22,8 +21,27 @@ export GDK_BACKEND=x11
 
 # Tauri 2 specific environment variables
 export CI=true
-export TAURI_CLI_NO_DEV_SERVER_WAIT=1
+export TAURI_CLI_NO_DEV_SERVER_WAIT=true  # Use true, not 1
 export TAURI_LINUX_AYATANA_APPINDICATOR=true
+
+# Fix X11 permissions
+mkdir -p /tmp/.X11-unix
+chmod 1777 /tmp/.X11-unix
+
+# Test if X server is accessible with retry
+echo "Testing X server connection..."
+for i in {1..5}; do
+    if DISPLAY=:99 xdpyinfo > /dev/null 2>&1; then
+        echo "X server connection successful"
+        break
+    fi
+    echo "Attempt $i: X server not ready, waiting..."
+    sleep 2
+    if [ $i -eq 5 ]; then
+        echo "ERROR: Cannot connect to X server after multiple attempts"
+        echo "X server status: $(ps aux | grep Xvfb)"
+    fi
+done
 
 # Debug info
 echo "Starting Tauri 2 app with the following configuration:"

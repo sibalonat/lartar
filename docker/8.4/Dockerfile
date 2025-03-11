@@ -160,6 +160,10 @@ RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
     chown sail:sail /tmp/runtime-dir; \
 fi
 
+# In your Dockerfile
+RUN mkdir -p /tmp/.X11-unix && \
+    chmod 1777 /tmp/.X11-unix
+
 # RUN if [ "$INCLUDE_USER_SETUP" = "true" ]; then \
 #     mkdir -p /home/sail/.cargo && \
 #     cp -r /root/.cargo/* /home/sail/.cargo/ && \
