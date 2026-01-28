@@ -80,4 +80,4 @@ jobs:
             - Run tests to ensure compatibility
           branch: automated/composer-update
           delete-branch: true
-          base: main
+          base: master
