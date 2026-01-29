@@ -39,5 +39,6 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: chore(deps): update Rust dependencies
-          title: 'chore(deps): Update Rust*
-
+          title: 'chore(deps): Update Rust dependencies'
+          body: This PR updates Rust dependencies by running `cargo update` in src-tauri.
+          base: main    # Change this if your default branch is not 'main'
