@@ -1,0 +1,49 @@
+# .github/workflows/cargo-update.yml
+name: Update Rust dependencies
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'         # Runs every Monday at 03:00 UTC
+  workflow_dispatch:             # Also allows manual triggering
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Update Rust dependencies
+        run: cargo update
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git diff
+          echo "changed=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changed != '0'
+        run: |
+          git checkout -b deps/update-$(date +%Y%m%d)
+          git add Cargo.lock
+          git commit -m "chore: update dependencies (automated)"
+          git push --set-upstream origin HEAD
+
+      - name: Create Pull Request
+        if: steps.git-check.outputs.changed != '0'
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: "chore: update dependencies (automated)"
+          title: "chore: update dependencies (automated)"
+          body: |
+            This PR updates Rust dependencies via `cargo update`. Please review changes before merging.
+          base: main   # Change to your default branch if different
