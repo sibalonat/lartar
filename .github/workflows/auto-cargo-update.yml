@@ -8,9 +8,7 @@ on:
 jobs:
   dependencies:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src-tauri
+
     steps:
       - uses: actions/checkout@v3
 
@@ -19,10 +17,12 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Update dependencies
+      - name: Update dependencies in src-tauri
+        working-directory: src-tauri
         run: cargo update
 
       - name: Commit and push changes
+        working-directory: src-tauri
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
