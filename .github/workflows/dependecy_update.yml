@@ -1,14 +1,16 @@
-# .github/workflows/cargo-update.yml
-name: Update Rust dependencies
+name: Auto Update Rust Dependencies
 
 on:
   schedule:
-    - cron: '0 3 * * 1'         # Runs every Monday at 03:00 UTC
-  workflow_dispatch:             # Also allows manual triggering
+    - cron: '0 6 * * MON'     # Every Monday at 06:00 UTC
+  workflow_dispatch:
 
 jobs:
-  update-dependencies:
+  dependencies:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src-tauri
     steps:
       - uses: actions/checkout@v3
 
@@ -16,34 +18,26 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          profile: minimal
-          override: true
 
-      - name: Update Rust dependencies
+      - name: Update dependencies
         run: cargo update
 
-      - name: Check for changes
-        id: git-check
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git diff
-          echo "changed=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
-
       - name: Commit and push changes
-        if: steps.git-check.outputs.changed != '0'
         run: |
-          git checkout -b deps/update-$(date +%Y%m%d)
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout -b auto-update-deps
           git add Cargo.lock
-          git commit -m "chore: update dependencies (automated)"
-          git push --set-upstream origin HEAD
+          if git diff --cached --quiet; then
+            echo "No dependency updates."
+            exit 0
+          fi
+          git commit -m "chore(deps): update Rust dependencies"
+          git push --set-upstream origin auto-update-deps
 
       - name: Create Pull Request
-        if: steps.git-check.outputs.changed != '0'
         uses: peter-evans/create-pull-request@v4
         with:
-          commit-message: "chore: update dependencies (automated)"
-          title: "chore: update dependencies (automated)"
-          body: |
-            This PR updates Rust dependencies via `cargo update`. Please review changes before merging.
-          base: main   # Change to your default branch if different
+          commit-message: chore(deps): update Rust dependencies
+          title: 'chore(deps): Update Rust*
+
