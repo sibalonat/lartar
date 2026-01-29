@@ -12,20 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
 
-      - name: Update dependencies in src-tauri
-        working-directory: src-tauri
+      - name: Update dependencies
         run: cargo update
+        working-directory: src-tauri
 
       - name: Commit and push changes
-        working-directory: src-tauri
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          cd src-tauri
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git checkout -b auto-update-deps
           git add Cargo.lock
           if git diff --cached --quiet; then
@@ -41,4 +40,5 @@ jobs:
           commit-message: chore(deps): update Rust dependencies
           title: 'chore(deps): Update Rust dependencies'
           body: This PR updates Rust dependencies by running `cargo update` in src-tauri.
-          base: main    # Change this if your default branch is not 'main'
+          base: main
+          branch: auto-update-deps
